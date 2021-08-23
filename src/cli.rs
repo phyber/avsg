@@ -27,6 +27,23 @@ fn create_app<'a, 'b>() -> App<'a, 'b> {
                 .takes_value(true)
         );
 
+    let encrypt = SubCommand::with_name("encrypt")
+        .about("Encrypt a file for Axiom Verge on Steam")
+        .arg(
+            Arg::with_name("INPUT")
+                .help("File to encrypt")
+                .index(1)
+                .required(true)
+                .takes_value(true)
+        )
+        .arg(
+            Arg::with_name("OUTPUT")
+                .help("File to output encrypted content to")
+                .index(2)
+                .required(true)
+                .takes_value(true)
+        );
+
     let hacker = SubCommand::with_name("hacker")
         .about("Lists creatures that need glitching for the Hacker achievement")
         .arg(
@@ -48,6 +65,7 @@ fn create_app<'a, 'b>() -> App<'a, 'b> {
         .version(crate_version!())
         .about(crate_description!())
         .subcommand(decrypt)
+        .subcommand(encrypt)
         .subcommand(hacker)
 }
 

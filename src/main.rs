@@ -16,7 +16,10 @@ mod cli;
 mod crypto;
 mod savedata;
 
-use crypto::decrypt_file;
+use crypto::{
+    decrypt_file,
+    encrypt_file,
+};
 use savedata::THSaveData;
 
 fn decrypt(matches: &ArgMatches) -> Result<()> {
@@ -44,6 +47,16 @@ fn decrypt(matches: &ArgMatches) -> Result<()> {
     // Decrypt the data and write it to the output
     let data = decrypt_file(filename)?;
     output.write_all(&data)?;
+
+    Ok(())
+}
+
+fn encrypt(matches: &ArgMatches) -> Result<()> {
+    // Both are required and safe to unwrap.
+    let input = matches.value_of("INPUT").unwrap();
+    let output = matches.value_of("OUTPUT").unwrap();
+
+    encrypt_file(input, output)?;
 
     Ok(())
 }
@@ -103,6 +116,11 @@ fn main() -> Result<()> {
         // Simply decrypt the given file
         ("decrypt", Some(matches)) => {
             decrypt(matches)?
+        },
+
+        // Encrypt a file
+        ("encrypt", Some(matches)) => {
+            encrypt(matches)?
         },
 
         // View details for Hacker achievement

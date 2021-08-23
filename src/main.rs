@@ -4,8 +4,13 @@
 // files are encrypted.
 #![forbid(unsafe_code)]
 use anyhow::Result;
+use clap::ArgMatches;
 use serde_xml_rs::from_reader;
-use std::str;
+use std::fs::OpenOptions;
+use std::io::{
+    self,
+    prelude::*,
+};
 
 mod cli;
 mod crypto;
@@ -14,21 +19,58 @@ mod savedata;
 use crypto::decrypt_file;
 use savedata::THSaveData;
 
-fn main() -> Result<()> {
-    let args = cli::parse_args();
+fn decrypt(matches: &ArgMatches) -> Result<()> {
+    let filename = matches.value_of("INPUT").unwrap();
 
-    // Required, safe to unwrap
-    let filename = args.value_of("FILENAME").unwrap();
+    // If we got an output argument, we write to that file, otherwise write
+    // to STDOUT
+    let output = matches.value_of("OUTPUT");
+    let mut output: Box<dyn io::Write> = if let Some(output) = output {
+        // Write to a new file. Error out if the file already exists to avoid
+        // accidentally overwriting things.
+        let fh = OpenOptions::new()
+            .create_new(true)
+            .write(true)
+            .open(output)?;
 
+        Box::new(fh)
+    }
+    else {
+        let stdout = io::stdout();
+
+        Box::new(stdout)
+    };
+
+    // Decrypt the data and write it to the output
     let data = decrypt_file(filename)?;
-    //println!("DATA: {:?}", data);
+    output.write_all(&data)?;
 
-    let xml = str::from_utf8(&data)?;
-    println!("{}", xml);
+    Ok(())
+}
+
+fn hacker(matches: &ArgMatches) -> Result<()> {
+    // Required, safe to unwrap
+    let filename = matches.value_of("INPUT").unwrap();
+
+    let data = if matches.is_present("UNENCRYPTED") {
+        // File is unencrypted, we can just read it normally.
+        let mut fh = OpenOptions::new()
+            .read(true)
+            .open(filename)?;
+
+        let mut buffer = Vec::new();
+        fh.read_to_end(&mut buffer)?;
+
+        buffer
+    }
+    else {
+        // Encrypted file, probably Steam. Decrypt it.
+        decrypt_file(filename)?
+    };
 
     let savedata: THSaveData = from_reader(&*data)?;
-    println!("{:#?}", savedata);
 
+    //println!("{:#?}", savedata);
 
     if let Some(remaining) = savedata.hacker_requires() {
         let num = remaining.len();
@@ -48,6 +90,28 @@ fn main() -> Result<()> {
     else {
         println!("Hacker Achievement requires:");
         println!("  - All creatures required");
+    }
+
+    Ok(())
+}
+
+fn main() -> Result<()> {
+    let args = cli::parse_args();
+
+    // Act on subcommands.
+    match args.subcommand() {
+        // Simply decrypt the given file
+        ("decrypt", Some(matches)) => {
+            decrypt(matches)?
+        },
+
+        // View details for Hacker achievement
+        ("hacker", Some(matches)) => {
+            hacker(matches)?
+        }
+
+        // Unreachable
+        (_, _) => unreachable!(),
     }
 
     Ok(())

@@ -1,6 +1,7 @@
 [package]
 name = "avsg"
 version = "0.1.0"
+description = "Axiom Verge Save Game Viewer"
 edition = "2018"
 resolver = "2"
 

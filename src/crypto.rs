@@ -43,8 +43,7 @@ fn read_file(filename: &str) -> Result<Vec<u8>> {
 // Decrypt the save data
 fn decrypt(data: &[u8]) -> Result<Vec<u8>> {
     let cipher    = Aes128Cbc::new_from_slices(SAVEGAME_KEY, SAVEGAME_IV)?;
-    let mut data  = data.to_owned();
-    let decrypted = cipher.decrypt_vec(&mut data)?;
+    let decrypted = cipher.decrypt_vec(data)?;
 
     Ok(decrypted)
 }
@@ -60,8 +59,7 @@ pub fn decrypt_file(filename: &str) -> Result<Vec<u8>> {
 // Encrypt a plain text file
 fn encrypt(data: &[u8]) -> Result<Vec<u8>> {
     let cipher    = Aes128Cbc::new_from_slices(SAVEGAME_KEY, SAVEGAME_IV)?;
-    let mut data  = data.to_owned();
-    let encrypted = cipher.encrypt_vec(&mut data);
+    let encrypted = cipher.encrypt_vec(data);
 
     Ok(encrypted)
 }

@@ -671,8 +671,14 @@ pub struct THSaveData {
 impl THSaveData {
     // Brick Breaker achievement
     fn achievement_brick_breaker(&self) {
-        let current = self.bricks_destroyed;
         let needed = ACHIEVEMENT_BRICK_BREAKER;
+        let current = if self.bricks_destroyed >= needed {
+            needed
+        }
+        else {
+            self.bricks_destroyed
+        };
+
         let percent: f32 = current as f32 / needed as f32 * 100.0;
 
         println!("  - Brick Breaker: {}/{} ({:.2}%)", current, needed, percent);
@@ -680,8 +686,14 @@ impl THSaveData {
 
     // Bubble Breaker achievement
     fn achievement_bubble_breaker(&self) {
-        let current = self.red_goo_destroyed;
         let needed = ACHIEVEMENT_BUBBLE_BREAKER;
+        let current = if self.red_goo_destroyed >= needed {
+            needed
+        }
+        else {
+            self.red_goo_destroyed
+        };
+
         let percent: f32 = current as f32 / needed as f32 * 100.0;
 
         println!("  - Bubble Breaker: {}/{} ({:.2}%)", current, needed, percent);

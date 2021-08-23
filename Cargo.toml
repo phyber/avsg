@@ -2,8 +2,11 @@
 name = "avsg"
 version = "0.1.0"
 description = "Axiom Verge Save Game Viewer"
+license = "MIT"
 edition = "2018"
 resolver = "2"
+readme = "README.md"
+include = ["src/**/*", "LICENSE-MIT", "README.md"]
 
 [dependencies]
 aes = "0.7"

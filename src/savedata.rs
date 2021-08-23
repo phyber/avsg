@@ -7,6 +7,11 @@ use std::fmt;
 use std::iter::FromIterator;
 use std::str;
 
+// Achievement requirements
+const ACHIEVEMENT_BRICK_BREAKER: i32 = 2_000;
+const ACHIEVEMENT_BUBBLE_BREAKER: i32 = 2_000;
+
+// Helper type for the SaveData structs
 type SerializableDictionary = HashMap<String, String>;
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq)]
@@ -664,6 +669,46 @@ pub struct THSaveData {
 }
 
 impl THSaveData {
+    // Brick Breaker achievement
+    fn achievement_brick_breaker(&self) {
+        let current = self.bricks_destroyed;
+        let needed = ACHIEVEMENT_BRICK_BREAKER;
+        let percent: f32 = current as f32 / needed as f32 * 100.0;
+
+        println!("  - Brick Breaker: {}/{} ({:.2}%)", current, needed, percent);
+    }
+
+    // Bubble Breaker achievement
+    fn achievement_bubble_breaker(&self) {
+        let current = self.red_goo_destroyed;
+        let needed = ACHIEVEMENT_BUBBLE_BREAKER;
+        let percent: f32 = current as f32 / needed as f32 * 100.0;
+
+        println!("  - Bubble Breaker: {}/{} ({:.2}%)", current, needed, percent);
+    }
+
+    fn achievement_hacker(&self) {
+        let needed = Creature::achievement_list().len();
+        let current = if let Some(glitched) = &self.creatures_glitched {
+            glitched.len()
+        }
+        else {
+            0
+        };
+
+        let percent: f32 = current as f32 / needed as f32 * 100.0;
+
+        println!("  - Hacker: {}/{} ({:.2}%)", current, needed, percent);
+    }
+
+    pub fn achievement_progress(&self) {
+        println!("Achievement Progress:");
+
+        self.achievement_brick_breaker();
+        self.achievement_bubble_breaker();
+        self.achievement_hacker();
+    }
+
     pub fn hacker_requires(&self) -> Option<Vec<Creature>> {
         if let Some(glitched) = &self.creatures_glitched {
             let needs                        = Creature::achievement_list();

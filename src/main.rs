@@ -22,6 +22,39 @@ use crypto::{
 };
 use savedata::THSaveData;
 
+fn read_savedata(filename: &str, unencrypted: bool) -> Result<THSaveData> {
+    let data = if unencrypted {
+        // File is unencrypted, we can just read it normally.
+        let mut fh = OpenOptions::new()
+            .read(true)
+            .open(filename)?;
+
+        let mut buffer = Vec::new();
+        fh.read_to_end(&mut buffer)?;
+
+        buffer
+    }
+    else {
+        // Encrypted file, probably Steam. Decrypt it.
+        decrypt_file(filename)?
+    };
+
+    let savedata = from_reader(&*data)?;
+
+    Ok(savedata)
+}
+
+fn achievements(matches: &ArgMatches) -> Result<()> {
+    // Required, safe to unwrap
+    let filename    = matches.value_of("INPUT").unwrap();
+    let unencrypted = matches.is_present("UNENCRYPTED");
+    let savedata    = read_savedata(filename, unencrypted)?;
+
+    savedata.achievement_progress();
+
+    Ok(())
+}
+
 fn decrypt(matches: &ArgMatches) -> Result<()> {
     let filename = matches.value_of("INPUT").unwrap();
 
@@ -63,25 +96,9 @@ fn encrypt(matches: &ArgMatches) -> Result<()> {
 
 fn hacker(matches: &ArgMatches) -> Result<()> {
     // Required, safe to unwrap
-    let filename = matches.value_of("INPUT").unwrap();
-
-    let data = if matches.is_present("UNENCRYPTED") {
-        // File is unencrypted, we can just read it normally.
-        let mut fh = OpenOptions::new()
-            .read(true)
-            .open(filename)?;
-
-        let mut buffer = Vec::new();
-        fh.read_to_end(&mut buffer)?;
-
-        buffer
-    }
-    else {
-        // Encrypted file, probably Steam. Decrypt it.
-        decrypt_file(filename)?
-    };
-
-    let savedata: THSaveData = from_reader(&*data)?;
+    let filename    = matches.value_of("INPUT").unwrap();
+    let unencrypted = matches.is_present("UNENCRYPTED");
+    let savedata    = read_savedata(filename, unencrypted)?;
 
     //println!("{:#?}", savedata);
 
@@ -113,6 +130,11 @@ fn main() -> Result<()> {
 
     // Act on subcommands.
     match args.subcommand() {
+        // Display all achievement progress
+        ("achievements", Some(matches)) => {
+            achievements(matches)?
+        },
+
         // Simply decrypt the given file
         ("decrypt", Some(matches)) => {
             decrypt(matches)?

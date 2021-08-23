@@ -11,6 +11,23 @@ use clap::{
 
 // Create the App (parser)
 fn create_app<'a, 'b>() -> App<'a, 'b> {
+    let achievements = SubCommand::with_name("achievements")
+        .about("Display all Achievement progress")
+        .arg(
+            Arg::with_name("UNENCRYPTED")
+                .help("Specify if operating on an unencrypted save game")
+                .long("unencrypted")
+                .short("u")
+                .takes_value(false)
+        )
+        .arg(
+            Arg::with_name("INPUT")
+                .help("Save game to analyse")
+                .index(1)
+                .required(true)
+                .takes_value(true)
+        );
+
     let decrypt = SubCommand::with_name("decrypt")
         .about("Decrypt an Axiom Verge Steam file")
         .arg(
@@ -64,6 +81,7 @@ fn create_app<'a, 'b>() -> App<'a, 'b> {
     App::new(crate_name!())
         .version(crate_version!())
         .about(crate_description!())
+        .subcommand(achievements)
         .subcommand(decrypt)
         .subcommand(encrypt)
         .subcommand(hacker)

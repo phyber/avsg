@@ -1,9 +1,13 @@
+// avsg: Simple tool to look at the Axiom Verge save file.
+//
+// This mostly assists with the Steam version of the game, since those save
+// files are encrypted.
+#![forbid(unsafe_code)]
 use anyhow::Result;
 use serde_xml_rs::from_reader;
-use std::env;
-use std::process::exit;
 use std::str;
 
+mod cli;
 mod crypto;
 mod savedata;
 
@@ -11,16 +15,10 @@ use crypto::decrypt_file;
 use savedata::THSaveData;
 
 fn main() -> Result<()> {
-    // Get a filename from the CLI
-    let args: Vec<String> = env::args().collect();
+    let args = cli::parse_args();
 
-    let filename = if args.len() > 1 {
-        &args[1]
-    }
-    else {
-        eprintln!("Provide a file to operate on");
-        exit(1)
-    };
+    // Required, safe to unwrap
+    let filename = args.value_of("FILENAME").unwrap();
 
     let data = decrypt_file(filename)?;
     //println!("DATA: {:?}", data);

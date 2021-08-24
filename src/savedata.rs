@@ -9,6 +9,13 @@ use std::iter::FromIterator;
 use std::str;
 
 // Achievement requirements
+const ACHIEVEMENT_ALL_HEALTH: i32 = 13;
+const ACHIEVEMENT_ALL_NOTES: i32 = 28;
+const ACHIEVEMENT_ALL_POWER: i32 = 9;
+const ACHIEVEMENT_ALL_RANGE: i32 = 4;
+const ACHIEVEMENT_ALL_SIZE: i32 = 4;
+const ACHIEVEMENT_ALL_TOOLS: i32 = 16;
+const ACHIEVEMENT_ALL_WEAPONS: i32 = 20;
 const ACHIEVEMENT_BRICK_BREAKER: i32 = 2_000;
 const ACHIEVEMENT_BUBBLE_BREAKER: i32 = 2_000;
 
@@ -313,7 +320,7 @@ enum THDifficultySetting {
     Hard,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Eq, PartialEq)]
 enum THItemType {
     #[serde(rename = "GLITCH_BOMB_DROP")]
     GlitchBombDrop,
@@ -670,6 +677,83 @@ pub struct THSaveData {
 }
 
 impl THSaveData {
+    // Helper methods for achievements
+    fn item_type_count(&self, type_: THItemType) -> usize {
+        let items: Vec<&THItemRecord> = self.items
+            .iter()
+            .filter(|item| {
+                item.type_ == type_
+                && item.excluded_from_count == false
+            })
+            .collect();
+
+        items.len()
+    }
+
+    // 100% Health achievement
+    // The count here also includes node fragments
+    fn achievement_all_health(&self) {
+        let needed = ACHIEVEMENT_ALL_HEALTH;
+        let nodes = self.item_type_count(THItemType::HealthNode);
+        let frags = self.item_type_count(THItemType::HealthNodeFragment);
+        let frags = frags / 5; // 5 is the number of fragments per node.
+        let current = nodes + frags;
+        let percent: f32 = current as f32 / needed as f32 * 100.0;
+
+        println!(
+            "  - 100% Health: {}/{} ({:.2}%)",
+            current,
+            needed,
+            percent,
+        );
+    }
+
+    // 100% Items
+    fn achievement_all_items(&self) {
+        let needed = {
+            ACHIEVEMENT_ALL_HEALTH
+            + ACHIEVEMENT_ALL_NOTES
+            + ACHIEVEMENT_ALL_POWER
+            + ACHIEVEMENT_ALL_RANGE
+            + ACHIEVEMENT_ALL_SIZE
+            + ACHIEVEMENT_ALL_TOOLS
+            + ACHIEVEMENT_ALL_WEAPONS
+        };
+
+        let health_nodes = self.item_type_count(THItemType::HealthNode);
+        let health_frags = self.item_type_count(THItemType::HealthNodeFragment);
+        let notes = self.item_type_count(THItemType::Lore);
+        let power_nodes = self.item_type_count(THItemType::PowerNode);
+        let power_frags = self.item_type_count(THItemType::PowerNodeFragment);
+        let range_nodes = self.item_type_count(THItemType::RangeNode);
+        let size_nodes = self.item_type_count(THItemType::SizeNode);
+        let tools = self.item_type_count(THItemType::Tool);
+        let upgrades = self.item_type_count(THItemType::PermanentUpgrade);
+        let weapons = self.item_type_count(THItemType::Weapon);
+
+        let current = {
+            health_nodes
+            + (health_frags / 5)
+            + notes
+            + power_nodes
+            + (power_frags / 5)
+            + range_nodes
+            + size_nodes
+            + tools
+            + upgrades
+            + weapons
+        };
+
+        let percent: f32 = current as f32 / needed as f32 * 100.0;
+
+        println!(
+            "  - 100% Items: {}/{} ({:.2}%)",
+            current,
+            needed,
+            percent,
+        );
+    }
+
     // 100% Map achievement
     fn achievement_all_map(&self) {
         let needed = self.total_screen_count;
@@ -679,6 +763,67 @@ impl THSaveData {
         println!(
             "  - 100% Map: {}/{} screens ({:.2}%)",
             current, needed, percent,
+        );
+    }
+
+    // 100% Notes
+    fn achievement_all_notes(&self) {
+        let needed = ACHIEVEMENT_ALL_NOTES;
+        let current = self.item_type_count(THItemType::Lore);
+        let percent: f32 = current as f32 / needed as f32 * 100.0;
+
+        println!(
+            "  - 100% Notes: {}/{} ({:.2}%)",
+            current,
+            needed,
+            percent,
+        );
+    }
+
+    // 100% Power
+    fn achievement_all_power(&self) {
+        let needed = ACHIEVEMENT_ALL_POWER;
+        let nodes = self.item_type_count(THItemType::PowerNode);
+        let frags = self.item_type_count(THItemType::PowerNodeFragment);
+        let frags = frags / 5; // 5 is the number of fragments per node.
+        let current = nodes + frags;
+        let percent: f32 = current as f32 / needed as f32 * 100.0;
+
+        println!(
+            "  - 100% Power: {}/{} ({:.2}%)",
+            current,
+            needed,
+            percent,
+        );
+    }
+
+    // 100% Tools
+    fn achievement_all_tools(&self) {
+        let needed = ACHIEVEMENT_ALL_TOOLS;
+        let tools = self.item_type_count(THItemType::Tool);
+        let upgrades = self.item_type_count(THItemType::PermanentUpgrade);
+        let current = tools + upgrades;
+        let percent: f32 = current as f32 / needed as f32 * 100.0;
+
+        println!(
+            "  - 100% Tools: {}/{} ({:.2}%)",
+            current,
+            needed,
+            percent,
+        );
+    }
+
+    // 100% Weapons
+    fn achievement_all_weapons(&self) {
+        let needed = ACHIEVEMENT_ALL_WEAPONS;
+        let current = self.item_type_count(THItemType::Weapon);
+        let percent: f32 = current as f32 / needed as f32 * 100.0;
+
+        println!(
+            "  - 100% Weapons: {}/{} ({:.2}%)",
+            current,
+            needed,
+            percent,
         );
     }
 
@@ -726,7 +871,13 @@ impl THSaveData {
     pub fn achievement_progress(&self) {
         println!("Achievement Progress:");
 
+        self.achievement_all_health();
+        self.achievement_all_items();
         self.achievement_all_map();
+        self.achievement_all_notes();
+        self.achievement_all_power();
+        self.achievement_all_tools();
+        self.achievement_all_weapons();
         self.achievement_brick_breaker();
         self.achievement_bubble_breaker();
         self.achievement_hacker();

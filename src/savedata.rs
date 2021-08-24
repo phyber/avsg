@@ -1,3 +1,4 @@
+// savedata: Save data structs and impl methods.
 use serde::Deserialize;
 use std::collections::{
     HashMap,
@@ -669,13 +670,28 @@ pub struct THSaveData {
 }
 
 impl THSaveData {
+    // 100% Map achievement
+    fn achievement_all_map(&self) {
+        let needed = self.total_screen_count;
+        let current = self.screen_count;
+        let percent: f32 = current as f32 / needed as f32 * 100.0;
+
+        println!(
+            "  - 100% Map: {}/{} screens ({:.2}%)",
+            current, needed, percent,
+        );
+    }
+
     // Brick Breaker achievement
     fn achievement_brick_breaker(&self) {
         let needed = ACHIEVEMENT_BRICK_BREAKER;
         let current = self.bricks_destroyed.clamp(0, needed);
         let percent: f32 = current as f32 / needed as f32 * 100.0;
 
-        println!("  - Brick Breaker: {}/{} ({:.2}%)", current, needed, percent);
+        println!(
+            "  - Brick Breaker: {}/{} bricks broken ({:.2}%)",
+            current, needed, percent,
+        );
     }
 
     // Bubble Breaker achievement
@@ -684,7 +700,10 @@ impl THSaveData {
         let current = self.red_goo_destroyed.clamp(0, needed);
         let percent: f32 = current as f32 / needed as f32 * 100.0;
 
-        println!("  - Bubble Breaker: {}/{} ({:.2}%)", current, needed, percent);
+        println!(
+            "  - Bubble Breaker: {}/{} bubbles broken ({:.2}%)",
+            current, needed, percent,
+        );
     }
 
     fn achievement_hacker(&self) {
@@ -698,12 +717,16 @@ impl THSaveData {
 
         let percent: f32 = current as f32 / needed as f32 * 100.0;
 
-        println!("  - Hacker: {}/{} ({:.2}%)", current, needed, percent);
+        println!(
+            "  - Hacker: {}/{} creatures glitched ({:.2}%)",
+            current, needed, percent,
+        );
     }
 
     pub fn achievement_progress(&self) {
         println!("Achievement Progress:");
 
+        self.achievement_all_map();
         self.achievement_brick_breaker();
         self.achievement_bubble_breaker();
         self.achievement_hacker();

@@ -679,15 +679,10 @@ pub struct THSaveData {
 impl THSaveData {
     // Helper methods for achievements
     fn item_type_count(&self, type_: THItemType) -> usize {
-        let items: Vec<&THItemRecord> = self.items
+        self.items
             .iter()
-            .filter(|item| {
-                item.type_ == type_
-                && item.excluded_from_count == false
-            })
-            .collect();
-
-        items.len()
+            .filter(|item| item.type_ == type_ && !item.excluded_from_count)
+            .count()
     }
 
     // 100% Health achievement

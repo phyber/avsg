@@ -747,26 +747,7 @@ impl THSaveData {
             .count()
     }
 
-    // 100% Health achievement
-    // The count here also includes node fragments
-    fn achievement_all_health(&self) {
-        let needed = ACHIEVEMENT_ALL_HEALTH;
-        let nodes = self.item_type_count(THItemType::HealthNode);
-        let frags = self.item_type_count(THItemType::HealthNodeFragment);
-        let frags = frags / FRAGMENTS_PER_NODE;
-        let current = nodes + frags;
-        let percent: f32 = current as f32 / needed as f32 * 100.0;
-
-        println!(
-            "  - 100% Health: {}/{} ({:.2}%)",
-            current,
-            needed,
-            percent,
-        );
-    }
-
-    // 100% Items
-    fn achievement_all_items(&self) {
+    fn item_counts(&self) -> (usize, i32, f32) {
         let needed = {
             ACHIEVEMENT_ALL_HEALTH
             + ACHIEVEMENT_ALL_NOTES
@@ -802,6 +783,31 @@ impl THSaveData {
         };
 
         let percent: f32 = current as f32 / needed as f32 * 100.0;
+
+        (current, needed, percent)
+    }
+
+    // 100% Health achievement
+    // The count here also includes node fragments
+    fn achievement_all_health(&self) {
+        let needed = ACHIEVEMENT_ALL_HEALTH;
+        let nodes = self.item_type_count(THItemType::HealthNode);
+        let frags = self.item_type_count(THItemType::HealthNodeFragment);
+        let frags = frags / FRAGMENTS_PER_NODE;
+        let current = nodes + frags;
+        let percent: f32 = current as f32 / needed as f32 * 100.0;
+
+        println!(
+            "  - 100% Health: {}/{} ({:.2}%)",
+            current,
+            needed,
+            percent,
+        );
+    }
+
+    // 100% Items
+    fn achievement_all_items(&self) {
+        let (current, needed, percent) = self.item_counts();
 
         println!(
             "  - 100% Items: {}/{} ({:.2}%)",
@@ -884,6 +890,19 @@ impl THSaveData {
         );
     }
 
+    // Boss kill achievements
+    fn achievement_boss(&self, boss: &str) {
+        let state = self.boss_state(boss);
+
+        // Vision is actually called Hallucination for the achievement
+        let boss = match boss {
+            "Vision" => "Hallucination",
+            _        => boss,
+        };
+
+        println!("  - {}: {}", boss, state);
+    }
+
     // Brick Breaker achievement
     fn achievement_brick_breaker(&self) {
         let needed = ACHIEVEMENT_BRICK_BREAKER;
@@ -942,17 +961,21 @@ impl THSaveData {
         );
     }
 
-    // Kill the Xedur boss
-    fn achievement_boss(&self, boss: &str) {
-        let state = self.boss_state(boss);
+    fn achievement_low_percent(&self) {
+        let maximum = 40.0;
+        let (current, needed, percent) = self.item_counts();
 
-        // Vision is actually called Hallucination for the achievement
-        let boss = match boss {
-            "Vision" => "Hallucination",
-            _        => boss,
+        let state = if percent >= maximum {
+            " Failed"
+        }
+        else {
+            ""
         };
 
-        println!("  - {}: {}", boss, state);
+        println!(
+            "  - Low %: {}/{} ({:.2}%){}",
+            current, needed, percent, state,
+        );
     }
 
     pub fn achievement_progress(&self) {
@@ -969,6 +992,7 @@ impl THSaveData {
         self.achievement_bubble_breaker();
         self.achievement_hack();
         self.achievement_hacker();
+        self.achievement_low_percent();
 
         for boss in BOSSES {
             self.achievement_boss(boss);

@@ -18,9 +18,51 @@ const ACHIEVEMENT_ALL_TOOLS: i32 = 16;
 const ACHIEVEMENT_ALL_WEAPONS: i32 = 20;
 const ACHIEVEMENT_BRICK_BREAKER: i32 = 2_000;
 const ACHIEVEMENT_BUBBLE_BREAKER: i32 = 2_000;
+const FRAGMENTS_PER_NODE: usize = 5;
+
+// Bosses that we can check for in the save file. We can't check for Athetos,
+// since the game doesn't save after defeating him.
+const BOSSES: &[&str] = &[
+    "Xedur",
+    "Telal",
+    "Uruku",
+    "Gir-Tab",
+    "Vision",
+    "Clone",
+    "Ukhu",
+    "Sentinel",
+];
 
 // Helper type for the SaveData structs
 type SerializableDictionary = HashMap<String, String>;
+
+#[derive(Debug)]
+enum BossState {
+    Alive,
+    Dead,
+}
+
+impl From<bool> for BossState {
+    fn from(dead: bool) -> Self {
+        if dead {
+            Self::Dead
+        }
+        else {
+            Self::Alive
+        }
+    }
+}
+
+impl fmt::Display for BossState {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let desc = match self {
+            Self::Alive => "Alive",
+            Self::Dead  => "Dead",
+        };
+
+        write!(f, "{}", desc)
+    }
+}
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq)]
 pub enum Creature {
@@ -678,7 +720,27 @@ pub struct THSaveData {
 
 impl THSaveData {
     // Helper methods for achievements
+    fn boss_state(&self, boss: &str) -> BossState {
+        // Boss states are recorded in the speecrun_checkpoints even when we're
+        // not on a speedrun. We can use this to check for bossing being
+        // killed.
+        let state = if let Some(checkpoints) = &self.speedrun_checkpoints {
+            // If we find the boss, it's dead.
+            checkpoints
+                .iter()
+                .filter(|c| c.name == boss)
+                .count() > 0
+        }
+        else {
+            false
+        };
+
+        state.into()
+    }
+
     fn item_type_count(&self, type_: THItemType) -> usize {
+        // Get a count for specific item types. Used to check for various 100%
+        // achievements.
         self.items
             .iter()
             .filter(|item| item.type_ == type_ && !item.excluded_from_count)
@@ -691,7 +753,7 @@ impl THSaveData {
         let needed = ACHIEVEMENT_ALL_HEALTH;
         let nodes = self.item_type_count(THItemType::HealthNode);
         let frags = self.item_type_count(THItemType::HealthNodeFragment);
-        let frags = frags / 5; // 5 is the number of fragments per node.
+        let frags = frags / FRAGMENTS_PER_NODE;
         let current = nodes + frags;
         let percent: f32 = current as f32 / needed as f32 * 100.0;
 
@@ -728,10 +790,10 @@ impl THSaveData {
 
         let current = {
             health_nodes
-            + (health_frags / 5)
+            + (health_frags / FRAGMENTS_PER_NODE)
             + notes
             + power_nodes
-            + (power_frags / 5)
+            + (power_frags / FRAGMENTS_PER_NODE)
             + range_nodes
             + size_nodes
             + tools
@@ -780,7 +842,7 @@ impl THSaveData {
         let needed = ACHIEVEMENT_ALL_POWER;
         let nodes = self.item_type_count(THItemType::PowerNode);
         let frags = self.item_type_count(THItemType::PowerNodeFragment);
-        let frags = frags / 5; // 5 is the number of fragments per node.
+        let frags = frags / FRAGMENTS_PER_NODE;
         let current = nodes + frags;
         let percent: f32 = current as f32 / needed as f32 * 100.0;
 
@@ -846,6 +908,23 @@ impl THSaveData {
         );
     }
 
+    fn achievement_hack(&self) {
+        let needed = 1;
+        let current = if let Some(glitched) = &self.creatures_glitched {
+            glitched.len().clamp(0, needed)
+        }
+        else {
+            0
+        };
+
+        let percent: f32 = current as f32 / needed as f32 * 100.0;
+
+        println!(
+            "  - Hack: {}/{} creature glitched({:.2}%)",
+            current, needed, percent,
+        );
+    }
+
     fn achievement_hacker(&self) {
         let needed = Creature::achievement_list().len();
         let current = if let Some(glitched) = &self.creatures_glitched {
@@ -863,6 +942,19 @@ impl THSaveData {
         );
     }
 
+    // Kill the Xedur boss
+    fn achievement_boss(&self, boss: &str) {
+        let state = self.boss_state(boss);
+
+        // Vision is actually called Hallucination for the achievement
+        let boss = match boss {
+            "Vision" => "Hallucination",
+            _        => boss,
+        };
+
+        println!("  - {}: {}", boss, state);
+    }
+
     pub fn achievement_progress(&self) {
         println!("Achievement Progress:");
 
@@ -875,15 +967,20 @@ impl THSaveData {
         self.achievement_all_weapons();
         self.achievement_brick_breaker();
         self.achievement_bubble_breaker();
+        self.achievement_hack();
         self.achievement_hacker();
+
+        for boss in BOSSES {
+            self.achievement_boss(boss);
+        }
     }
 
     pub fn hacker_requires(&self) -> Option<Vec<Creature>> {
         if let Some(glitched) = &self.creatures_glitched {
-            let needs                        = Creature::achievement_list();
-            let needs: HashSet<&Creature>    = HashSet::from_iter(needs);
+            let needs = Creature::achievement_list();
+            let needs: HashSet<&Creature> = HashSet::from_iter(needs);
             let glitched: HashSet<&Creature> = HashSet::from_iter(glitched);
-            let difference                   = needs.difference(&glitched);
+            let difference = needs.difference(&glitched);
 
             // Get an owned Vec<Creature> from our difference.
             let required: Vec<Creature> = difference

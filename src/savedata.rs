@@ -1002,6 +1002,17 @@ impl THSaveData {
         );
     }
 
+    fn achievement_pacifist(&self) {
+        let state = self.boss_state("Clone");
+
+        let ok  = match state {
+            BossState::Alive => "OK",
+            BossState::Dead  => "Failed",
+        };
+
+        println!("  - Pacifist: Clone {} ({})", state, ok);
+    }
+
     pub fn achievement_progress(&self) {
         println!("Achievement Progress:");
 
@@ -1018,6 +1029,7 @@ impl THSaveData {
         self.achievement_hacker();
         self.achievement_low_percent();
         self.achievement_mostly_invincible();
+        self.achievement_pacifist();
 
         for boss in BOSSES {
             self.achievement_boss(boss);

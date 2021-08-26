@@ -12,10 +12,12 @@ use std::io::{
     prelude::*,
 };
 
+mod achievements;
 mod cli;
 mod crypto;
 mod savedata;
 
+use achievements::Achievements;
 use crypto::{
     decrypt_file,
     encrypt_file,
@@ -50,7 +52,8 @@ fn achievements(matches: &ArgMatches) -> Result<()> {
     let unencrypted = matches.is_present("UNENCRYPTED");
     let savedata    = read_savedata(filename, unencrypted)?;
 
-    savedata.achievement_progress();
+    let achievements = Achievements::new(&savedata);
+    achievements.achievement_progress();
 
     Ok(())
 }
@@ -96,13 +99,12 @@ fn encrypt(matches: &ArgMatches) -> Result<()> {
 
 fn hacker(matches: &ArgMatches) -> Result<()> {
     // Required, safe to unwrap
-    let filename    = matches.value_of("INPUT").unwrap();
+    let filename = matches.value_of("INPUT").unwrap();
     let unencrypted = matches.is_present("UNENCRYPTED");
-    let savedata    = read_savedata(filename, unencrypted)?;
+    let savedata = read_savedata(filename, unencrypted)?;
+    let achievements = Achievements::new(&savedata);
 
-    //println!("{:#?}", savedata);
-
-    if let Some(remaining) = savedata.hacker_requires() {
+    if let Some(remaining) = achievements.hacker_requires() {
         let num = remaining.len();
         let word = if num > 1 {
             "creatures"

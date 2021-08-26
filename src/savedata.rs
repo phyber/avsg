@@ -910,7 +910,7 @@ impl THSaveData {
         let percent: f32 = current as f32 / needed as f32 * 100.0;
 
         println!(
-            "  - Brick Breaker: {}/{} bricks broken ({:.2}%)",
+            "  - Brick Breaker: {}/{} ({:.2}%)",
             current, needed, percent,
         );
     }
@@ -922,7 +922,7 @@ impl THSaveData {
         let percent: f32 = current as f32 / needed as f32 * 100.0;
 
         println!(
-            "  - Bubble Breaker: {}/{} bubbles broken ({:.2}%)",
+            "  - Bubble Breaker: {}/{} ({:.2}%)",
             current, needed, percent,
         );
     }
@@ -939,7 +939,7 @@ impl THSaveData {
         let percent: f32 = current as f32 / needed as f32 * 100.0;
 
         println!(
-            "  - Hack: {}/{} creature glitched({:.2}%)",
+            "  - Hack: {}/{} ({:.2}%)",
             current, needed, percent,
         );
     }
@@ -956,7 +956,7 @@ impl THSaveData {
         let percent: f32 = current as f32 / needed as f32 * 100.0;
 
         println!(
-            "  - Hacker: {}/{} creatures glitched ({:.2}%)",
+            "  - Hacker: {}/{} ({:.2}%)",
             current, needed, percent,
         );
     }
@@ -966,15 +966,39 @@ impl THSaveData {
         let (current, needed, percent) = self.item_counts();
 
         let state = if percent >= maximum {
-            " Failed"
+            "Failed"
         }
         else {
-            ""
+            "OK"
         };
 
         println!(
-            "  - Low %: {}/{} ({:.2}%){}",
+            "  - Low %: {}/{} ({:.2}%) ({})",
             current, needed, percent, state,
+        );
+    }
+
+    fn achievement_mostly_invincible(&self) {
+        let maximum = 1;
+        let current = self.num_deaths;
+
+        let state = if current > maximum {
+            "Failed"
+        }
+        else {
+            "OK"
+        };
+
+        let maybe_plural = if current == 1 {
+            "death"
+        }
+        else {
+            "deaths"
+        };
+
+        println!(
+            "  - Mostly Invincible: {}/{} {} ({})",
+            current, maximum, maybe_plural, state,
         );
     }
 
@@ -993,6 +1017,7 @@ impl THSaveData {
         self.achievement_hack();
         self.achievement_hacker();
         self.achievement_low_percent();
+        self.achievement_mostly_invincible();
 
         for boss in BOSSES {
             self.achievement_boss(boss);

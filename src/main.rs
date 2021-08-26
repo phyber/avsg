@@ -53,7 +53,7 @@ fn achievements(matches: &ArgMatches) -> Result<()> {
     let savedata    = read_savedata(filename, unencrypted)?;
 
     let achievements = Achievements::new(&savedata);
-    achievements.achievement_progress();
+    achievements.progress();
 
     Ok(())
 }

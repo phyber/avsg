@@ -144,7 +144,7 @@ impl<'a> Achievements<'a> {
 
     // 100% Health achievement
     // The count here also includes node fragments
-    fn achievement_all_health(&self) {
+    fn all_health(&self) {
         let needed = ACHIEVEMENT_ALL_HEALTH;
         let nodes = self.item_type_count(THItemType::HealthNode);
         let frags = self.item_type_count(THItemType::HealthNodeFragment);
@@ -161,7 +161,7 @@ impl<'a> Achievements<'a> {
     }
 
     // 100% Items
-    fn achievement_all_items(&self) {
+    fn all_items(&self) {
         let (current, needed, percent) = self.item_counts();
 
         println!(
@@ -173,7 +173,7 @@ impl<'a> Achievements<'a> {
     }
 
     // 100% Map achievement
-    fn achievement_all_map(&self) {
+    fn all_map(&self) {
         let needed = self.savedata.total_screen_count;
         let current = self.savedata.screen_count;
         let percent: f32 = current as f32 / needed as f32 * 100.0;
@@ -185,7 +185,7 @@ impl<'a> Achievements<'a> {
     }
 
     // 100% Notes
-    fn achievement_all_notes(&self) {
+    fn all_notes(&self) {
         let needed = ACHIEVEMENT_ALL_NOTES;
         let current = self.item_type_count(THItemType::Lore);
         let percent: f32 = current as f32 / needed as f32 * 100.0;
@@ -199,7 +199,7 @@ impl<'a> Achievements<'a> {
     }
 
     // 100% Power
-    fn achievement_all_power(&self) {
+    fn all_power(&self) {
         let needed = ACHIEVEMENT_ALL_POWER;
         let nodes = self.item_type_count(THItemType::PowerNode);
         let frags = self.item_type_count(THItemType::PowerNodeFragment);
@@ -216,7 +216,7 @@ impl<'a> Achievements<'a> {
     }
 
     // 100% Tools
-    fn achievement_all_tools(&self) {
+    fn all_tools(&self) {
         let needed = ACHIEVEMENT_ALL_TOOLS;
         let tools = self.item_type_count(THItemType::Tool);
         let upgrades = self.item_type_count(THItemType::PermanentUpgrade);
@@ -232,7 +232,7 @@ impl<'a> Achievements<'a> {
     }
 
     // 100% Weapons
-    fn achievement_all_weapons(&self) {
+    fn all_weapons(&self) {
         let needed = ACHIEVEMENT_ALL_WEAPONS;
         let current = self.item_type_count(THItemType::Weapon);
         let percent: f32 = current as f32 / needed as f32 * 100.0;
@@ -246,7 +246,7 @@ impl<'a> Achievements<'a> {
     }
 
     // Boss kill achievements
-    fn achievement_boss(&self, boss: &str) {
+    fn boss(&self, boss: &str) {
         let state = self.boss_state(boss);
 
         // Vision is actually called Hallucination for the achievement
@@ -259,7 +259,7 @@ impl<'a> Achievements<'a> {
     }
 
     // Brick Breaker achievement
-    fn achievement_brick_breaker(&self) {
+    fn brick_breaker(&self) {
         let needed = ACHIEVEMENT_BRICK_BREAKER;
         let current = self.savedata.bricks_destroyed.clamp(0, needed);
         let percent: f32 = current as f32 / needed as f32 * 100.0;
@@ -271,7 +271,7 @@ impl<'a> Achievements<'a> {
     }
 
     // Bubble Breaker achievement
-    fn achievement_bubble_breaker(&self) {
+    fn bubble_breaker(&self) {
         let needed = ACHIEVEMENT_BUBBLE_BREAKER;
         let current = self.savedata.red_goo_destroyed.clamp(0, needed);
         let percent: f32 = current as f32 / needed as f32 * 100.0;
@@ -282,7 +282,7 @@ impl<'a> Achievements<'a> {
         );
     }
 
-    fn achievement_hack(&self) {
+    fn hack(&self) {
         let needed = 1;
         let glitched = &self.savedata.creatures_glitched;
         let current = if let Some(glitched) = glitched {
@@ -300,7 +300,7 @@ impl<'a> Achievements<'a> {
         );
     }
 
-    fn achievement_hacker(&self) {
+    fn hacker(&self) {
         let needed = Creature::achievement_list().len();
         let glitched = &self.savedata.creatures_glitched;
         let current = if let Some(glitched) = glitched {
@@ -318,7 +318,7 @@ impl<'a> Achievements<'a> {
         );
     }
 
-    fn achievement_low_percent(&self) {
+    fn low_percent(&self) {
         let maximum = 40.0;
         let (current, needed, percent) = self.item_counts();
 
@@ -335,7 +335,7 @@ impl<'a> Achievements<'a> {
         );
     }
 
-    fn achievement_mostly_invincible(&self) {
+    fn mostly_invincible(&self) {
         let maximum = 1;
         let current = self.savedata.num_deaths;
 
@@ -359,7 +359,7 @@ impl<'a> Achievements<'a> {
         );
     }
 
-    fn achievement_pacifist(&self) {
+    fn pacifist(&self) {
         let state = self.boss_state("Clone");
 
         let ok  = match state {
@@ -370,26 +370,26 @@ impl<'a> Achievements<'a> {
         println!("  - Pacifist: Clone {} ({})", state, ok);
     }
 
-    pub fn achievement_progress(&self) {
+    pub fn progress(&self) {
         println!("Achievement Progress:");
 
-        self.achievement_all_health();
-        self.achievement_all_items();
-        self.achievement_all_map();
-        self.achievement_all_notes();
-        self.achievement_all_power();
-        self.achievement_all_tools();
-        self.achievement_all_weapons();
-        self.achievement_brick_breaker();
-        self.achievement_bubble_breaker();
-        self.achievement_hack();
-        self.achievement_hacker();
-        self.achievement_low_percent();
-        self.achievement_mostly_invincible();
-        self.achievement_pacifist();
+        self.all_health();
+        self.all_items();
+        self.all_map();
+        self.all_notes();
+        self.all_power();
+        self.all_tools();
+        self.all_weapons();
+        self.brick_breaker();
+        self.bubble_breaker();
+        self.hack();
+        self.hacker();
+        self.low_percent();
+        self.mostly_invincible();
+        self.pacifist();
 
         for boss in BOSSES {
-            self.achievement_boss(boss);
+            self.boss(boss);
         }
     }
 

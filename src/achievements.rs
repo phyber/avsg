@@ -4,12 +4,16 @@ use crate::savedata::{
     THItemType,
     THSaveData,
 };
+use humantime::{
+    format_duration,
+    FormattedDuration,
+};
 use std::collections::HashSet;
 use std::fmt;
 use std::iter::FromIterator;
 use std::str;
+use std::time::Duration;
 
-// Achievement requirements
 const ACHIEVEMENT_ALL_HEALTH: i32 = 13;
 const ACHIEVEMENT_ALL_NOTES: i32 = 28;
 const ACHIEVEMENT_ALL_POWER: i32 = 9;
@@ -20,6 +24,10 @@ const ACHIEVEMENT_ALL_WEAPONS: i32 = 20;
 const ACHIEVEMENT_BRICK_BREAKER: i32 = 2_000;
 const ACHIEVEMENT_BUBBLE_BREAKER: i32 = 2_000;
 const FRAGMENTS_PER_NODE: usize = 5;
+
+// Overclocked needs to be done in under 4 hours.
+// Calculated as 4 * 60 * 60 / 0.01667 and rounding up to the next whole frame.
+const OVERCLOCKED_MAX_FRAMES: f64 = 863_828.0;
 
 // Bosses that we can check for in the save file. We can't check for Athetos,
 // since the game doesn't save after defeating him.
@@ -33,6 +41,17 @@ const BOSSES: &[&str] = &[
     "Ukhu",
     "Sentinel",
 ];
+
+// Axiom verge time is based on 60fps with a 16.67ms frame time.
+const FRAMETIME_MS: f64 = 0.01667;
+
+// Turns frame counts into real time duration.
+fn frames_to_duration(frames: f64) -> FormattedDuration {
+    let seconds = (frames * FRAMETIME_MS) as u64;
+    let duration = Duration::from_secs(seconds);
+
+    format_duration(duration)
+}
 
 #[derive(Debug)]
 enum BossState {
@@ -359,6 +378,25 @@ impl<'a> Achievements<'a> {
         );
     }
 
+    fn overclocked(&self) {
+        let frames = self.savedata.effective_frames;
+        let current_time = frames_to_duration(frames as f64);
+        let max_time = frames_to_duration(OVERCLOCKED_MAX_FRAMES);
+
+        // Compare the underlying Durations with get_ref
+        let state = if current_time.get_ref() < max_time.get_ref() {
+            "OK"
+        }
+        else {
+            "Failed"
+        };
+
+        println!(
+            "  - Overclocked: {}/{} ({})",
+            current_time, max_time, state,
+        );
+    }
+
     fn pacifist(&self) {
         let state = self.boss_state("Clone");
 
@@ -386,6 +424,7 @@ impl<'a> Achievements<'a> {
         self.hacker();
         self.low_percent();
         self.mostly_invincible();
+        self.overclocked();
         self.pacifist();
 
         for boss in BOSSES {

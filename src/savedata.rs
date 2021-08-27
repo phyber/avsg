@@ -564,7 +564,7 @@ pub struct THSaveData {
     total_frames: i64,
 
     #[serde(rename = "mEffectiveFrames")]
-    effective_frames: f64,
+    pub effective_frames: f64,
 
     #[serde(rename = "mScreenCount")]
     pub screen_count: i32,

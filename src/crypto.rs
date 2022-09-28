@@ -1,9 +1,10 @@
 use aes::Aes128;
 use anyhow::Result;
-use block_modes::block_padding::Pkcs7;
-use block_modes::{
-    BlockMode,
-    Cbc,
+use aes::cipher::block_padding::Pkcs7;
+use aes::cipher::{
+    BlockDecryptMut,
+    BlockEncryptMut,
+    KeyIvInit,
 };
 use std::io::prelude::*;
 use std::fs::{
@@ -12,7 +13,8 @@ use std::fs::{
 };
 use std::str;
 
-type Aes128Cbc = Cbc<Aes128, Pkcs7>;
+type Aes128CbcDec = cbc::Decryptor<Aes128>;
+type Aes128CbcEnc = cbc::Encryptor<Aes128>;
 
 // Data encryption key
 const SAVEGAME_KEY: &[u8] = &[
@@ -42,8 +44,8 @@ fn read_file(filename: &str) -> Result<Vec<u8>> {
 
 // Decrypt the save data
 fn decrypt(data: &[u8]) -> Result<Vec<u8>> {
-    let cipher    = Aes128Cbc::new_from_slices(SAVEGAME_KEY, SAVEGAME_IV)?;
-    let decrypted = cipher.decrypt_vec(data)?;
+    let cipher    = Aes128CbcDec::new(SAVEGAME_KEY.into(), SAVEGAME_IV.into());
+    let decrypted = cipher.decrypt_padded_vec_mut::<Pkcs7>(data)?;
 
     Ok(decrypted)
 }
@@ -58,8 +60,8 @@ pub fn decrypt_file(filename: &str) -> Result<Vec<u8>> {
 
 // Encrypt a plain text file
 fn encrypt(data: &[u8]) -> Result<Vec<u8>> {
-    let cipher    = Aes128Cbc::new_from_slices(SAVEGAME_KEY, SAVEGAME_IV)?;
-    let encrypted = cipher.encrypt_vec(data);
+    let cipher    = Aes128CbcEnc::new(SAVEGAME_KEY.into(), SAVEGAME_IV.into());
+    let encrypted = cipher.encrypt_padded_vec_mut::<Pkcs7>(data);
 
     Ok(encrypted)
 }

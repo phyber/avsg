@@ -9,12 +9,17 @@ readme = "README.md"
 include = ["src/**/*", "LICENSE-MIT", "README.md"]
 
 [dependencies]
-aes = "0.7"
+aes = "0.8"
 anyhow = "1.0"
-block-modes = "0.8"
 clap = "2.33"
 humantime = "2.1"
 serde-xml-rs = "0.5"
+
+[dependencies.cbc]
+version = "0.1"
+features = [
+    "std",
+]
 
 [dependencies.serde]
 version = "1.0"
